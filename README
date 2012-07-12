@@ -1,6 +1,6 @@
 This is the server used to communicate with the Arduino powering the telescope motors. It may/can be extended to communicate with the RF box once that becomes avaliable.
 
-The initial working version allows the client to tell the telescope to move to some point in the sky. This point can be designated in one of four coordinate systems. (RA,Dec), (Az, El), (HA, Dec), and galactic coordinates. 
+The initial working version allows the client to tell the telescope to move to some point in the sky. This point can be designated in one of four coordinate systems. (RA,Dec), (Az, El), (HA, Dec), and galactic coordinates.
 
 The server can also respond to requests for information about the telescope's current location and the status of limit switches.
 
