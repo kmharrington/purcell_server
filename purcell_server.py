@@ -111,6 +111,11 @@ class proxy_sender(asynchat.async_chat):
                 #If we hit a limit switch, find out which one
                 if status == s.MoveStatus.LIMIT:
                     self.server.tel.requestLimits(self)
+                    motor = cmd[2]
+                    if motor == 'E':
+                        self.server.tel.setLocGoal((self.server.tel.getLocation()[0], self.server.tel.getLocGoal()[1]))
+                    else:
+                        self.server.tel.setLocGoal((self.server.tel.getLocGoal()[0], self.server.tel.getLocation()[1]))
                 self.server.tel.currentMoveGoal = None
                 (ha, dc) = self.server.tel.clicks2hadc(
                     self.server.tel.getLocation())
@@ -176,7 +181,7 @@ class proxy_receiver(asynchat.async_chat):
         print('Closing')
         self.server.hasClient = False
         self.server.clientAdd = None
-        self.sender.close()
+        #self.sender.close()
         self.close()
 
     def process_request(self, data):
@@ -289,9 +294,9 @@ class telescope:
 
     IDLE, MOVING = range(2)
     CLKS_PER_DEG = 11.1
-    # minimum step telescope can do, currently: 8 clks * deg/clk
-    MIN_STEP = (0, 43, 12)
-    MIN_STEP_CLICKS = 8
+    # minimum step telescope can do, currently: 5 clks * deg/clk
+    MIN_STEP = (0, 27, 0)
+    MIN_STEP_CLICKS = 5
 
     def __init__(self):
         self.status = telescope.IDLE
@@ -314,6 +319,7 @@ class telescope:
         (newEq, newDC) = newargs
         self.eq_goal = newEq
         self.dc_goal = newDC
+        print 'Current Goals: ', (self.eq_goal, self.dc_goal)
 
     def getLocGoal(self):
         return (self.eq_goal, self.dc_goal)
@@ -322,7 +328,6 @@ class telescope:
         self.eq_clicks = newEq
         self.dc_clicks = newDC
         print('New Location: ', (self.eq_clicks, self.dc_clicks))
-        print('Current Goals: ', (self.eq_goal, self.dc_goal))
 
     def getLocation(self):
         return (self.eq_clicks, self.dc_clicks)
@@ -331,6 +336,7 @@ class telescope:
         (eqClicks, dcClicks) = Clicks
         command = 'cmd e ' + str(eqClicks) + ' ' + str(dcClicks) + '\ncmd r\n'
         sender.push(command)
+        self.setLocGoal(eqClicks, dcClicks)
 
     def willMoveOnUpdate(self):
         if (abs(self.eq_goal - self.eq_clicks) > telescope.MIN_STEP_CLICKS or
@@ -344,9 +350,9 @@ class telescope:
             self.currentMoveGoal = (self.eq_goal, self.dc_clicks)
             command = 'cmd m E '
             if toMove < 0:
-                command += '0 '
-            else:
                 command += '1 '
+            else:
+                command += '0 '
             command += str(abs(toMove))
             sender.push(command + '\n')
             return False
@@ -357,7 +363,7 @@ class telescope:
     def moveDC(self, sender):
         if abs(self.dc_goal - self.dc_clicks) > telescope.MIN_STEP_CLICKS:
             toMove = self.dc_goal - self.dc_clicks
-            self.currentMoveGoal = (self.eq_clicks, self.dc_clicks)
+            self.currentMoveGoal = (self.eq_clicks, self.dc_goal)
             command = 'cmd m D '
             if toMove < 0:
                 command += '0 '
