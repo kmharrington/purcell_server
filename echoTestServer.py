@@ -72,14 +72,14 @@ class proxy_receiver (asynchat.async_chat):
             res = 'move:EXECUTE,'+cmd[2]+','+cmd[3]+','+cmd[4]+'\n'
             if cmd[2] == 'E':
                 if int(cmd[3]) == 0:
-                    self.server.eqLoc -= int(cmd[4])
+                    self.server.eqLoc += int(cmd[4]) - 10
                 else:
-                    self.server.eqLoc += int(cmd[4])
+                    self.server.eqLoc -= int(cmd[4]) +10
             else:
                 if int(cmd[3]) == 0:
-                    self.server.dcLoc -= int(cmd[4])
+                    self.server.dcLoc -= int(cmd[4]) - 10 
                 else:
-                    self.server.dcLoc += int(cmd[4])
+                    self.server.dcLoc += int(cmd[4]) + 10
             res += 'location:('+str(self.server.eqLoc)+','+str(self.server.dcLoc)+')\n'
             res += 'move:COMPLETE,0,'+cmd[2]+','+cmd[3]+','+cmd[4]+'\n'
         elif cmd[1] == 'l':
