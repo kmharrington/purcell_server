@@ -102,7 +102,7 @@ class proxy_sender (asynchat.async_chat):
                 self.receiver.push(s.MoveResponse(s.MoveStatus.EXECUTE,sky_point.HADC, ha, dc) + '\n')
             elif cmd[0] == 'COMPLETE':
                 status = int(cmd[1])
-                #If we hit a limit switch, find out which one
+                #If we hit a limit switch, find out which one and set movement goals to current location
                 if status == s.MoveStatus.LIMIT:
                     self.server.tel.requestLimits(self)
                     motor = cmd[2]
@@ -255,7 +255,8 @@ class proxy_receiver (asynchat.async_chat):
         elif info == s.Info.SET_LOCATION:
             pnt = sky_point(unit, locA, locB)
             self.server.tel.setTelescopeLocation(self.server.tel.hadc2clicks(pnt.getLoc(sky_point.HADC)), self.sender)
-
+        elif info == s.Info.TELESCOPE:
+            self.push(s.TelescopeResponse(self.server.tel.MIN_STEP))
 
 class telescope():
     '''This class stores properties and methods which relate to the actual
@@ -277,8 +278,8 @@ class telescope():
     '''
     IDLE, MOVING = range(2)
     CLKS_PER_DEG = 11.1
-    MIN_STEP = (0,27,0) #minimum step telescope can do, currently: 5 clks * deg/clk
-    MIN_STEP_CLICKS = 5
+    MIN_STEP = (0,21,36) #minimum step telescope can do, currently: 4 clks * deg/clk
+    MIN_STEP_CLICKS = 4
 
     def __init__(self):
         self.status = telescope.IDLE

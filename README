@@ -5,3 +5,13 @@ The initial working version allows the client to tell the telescope to move to s
 The server can also respond to requests for information about the telescope's current location and the status of limit switches.
 
 It is currently missing any nice way of calibrating the location of the telescope. This will hopefully be implemented later.
+
+For the Telescope Limit Switches:
+The limit switch calibrations are likely correct within about 2 degrees. This should be enough that once the RF portion has been created the actual pointing location can be found. The best way to calibrate the pointing location will be from looking at radio sources (the sun) where we know their exact location and going from there.
+
+The equatorial mount is counted off in hour angle, the Right Limit is at approximately (85,2,42) degrees and the Left Limit is at approximately (-86,34,35) degrees.
+    In "HH:MM:SS":
+    Right Limit Hour Angle: "5:40:10.8"
+    Left Limit Hour Angle: "-5:46:18.33"
+    
+The declination mount is, unsurprisingly, measured by the declination. The upper limit is at approximately (66,51,55) degrees.

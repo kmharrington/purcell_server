@@ -75,7 +75,7 @@ class MoveStatus(object):
         pass
 
 class Info(object):
-    LIMITS, LOC, SET_LOCATION = range(3)
+    LIMITS, LOC, SET_LOCATION, TELESCOPE = range(4)
     def __init__(self):
         pass
 
