@@ -88,7 +88,8 @@ def ConnectResponse():
     return json.dumps({"name": "purcell",
                        "res": PurcellResponse.CONNECT})
 
-def LocationResponse(unit, (locA, locB)):
+def LocationResponse(unit, locs):
+    (locA, locB) = locs
     return json.dumps({"name": "purcell",
                        "res": PurcellResponse.INFO,
                        "info": Info.LOC,

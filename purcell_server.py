@@ -37,11 +37,12 @@ class proxy_server(asyncore.dispatcher):
     def handle_close(self):
         self.close()
 
-    def reject_client(self, (conn, addr)):
+    def reject_client(self, args):
         '''
         The Arduino should only have one client at a time,
         all other attempts to connect are rejected
         '''
+        (conn, addr) = args
         print('Rejecting Client')
         data = conn.recv(8192)
         if data.rfind('RUBUSY') != -1:
@@ -203,12 +204,12 @@ class proxy_receiver(asynchat.async_chat):
                     if cmd['cmd'] == s.PurcellCommand.CONNECT:
                         self.push(s.ConnectResponse() + '\n')
                     elif cmd['cmd'] == s.PurcellCommand.MOVE:
-                        print 'Move Command'
+                        print('Move Command')
                         self.moveCommand(cmd)
                     elif cmd['cmd'] == s.PurcellCommand.RADIO:
-                        print 'Radio Command'
+                        print('Radio Command')
                     elif cmd['cmd'] == s.PurcellCommand.INFO:
-                        print 'Info Command'
+                        print('Info Command')
                         self.infoCommand(cmd)
                     else:
                         self.push(s.FailResponse("cmd option not known") + '\n')
@@ -319,7 +320,7 @@ class telescope:
         (newEq, newDC) = newargs
         self.eq_goal = newEq
         self.dc_goal = newDC
-        print 'Current Goals: ', (self.eq_goal, self.dc_goal)
+        print('Current Goals: ', (self.eq_goal, self.dc_goal))
 
     def getLocGoal(self):
         return (self.eq_goal, self.dc_goal)
