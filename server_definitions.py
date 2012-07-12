@@ -4,16 +4,16 @@ import math
 Every JSON Command Object will have:
     "name" = "purcell"
     "cmd" = PurcellCommand.???
-    
+
     for "cmd" = MOVE
         "unit" = sky_point.???
         "locA" = EQ or AZ location (A, B, C)
         "locB" = DC or EL location (A, B, C)
             ^^These are final locations not relative locations
-    
+
     for "cmd" = RADIO
         I Don't know yet
-    
+
     for "cmd" = INFO
         "info" = InfoCommand.???
         if "info" = LOC
@@ -80,38 +80,33 @@ class Info(object):
         pass
 
 def FailResponse(message):
-    return json.dumps({"name":"purcell",
-                        "res":PurcellResponse.FAIL, 
-                        "message":message})
+    return json.dumps({"name": "purcell",
+                       "res": PurcellResponse.FAIL,
+                       "message": message})
 
 def ConnectResponse():
-    return json.dumps({"name":"purcell",
-                        "res":PurcellResponse.CONNECT})
+    return json.dumps({"name": "purcell",
+                       "res": PurcellResponse.CONNECT})
 
-def LocationResponse(unit, (locA, locB)):
-    return json.dumps({"name":"purcell",
-                        "res":PurcellResponse.INFO,
-                        "info":Info.LOC,
-                        "unit":unit,
-                        "locA":locA,
-                        "locB":locB})
-
+def LocationResponse(unit, locs):
+    (locA, locB) = locs
+    return json.dumps({"name": "purcell",
+                       "res": PurcellResponse.INFO,
+                       "info": Info.LOC,
+                       "unit": unit,
+                       "locA": locA,
+                       "locB": locB})
 
 def LimitResponse(limits):
-    return json.dumps({"name":"purcell",
-                        "res": PurcellResponse.INFO,
-                        "info":Info.LIMITS,
-                        "limits":limits})
-
+    return json.dumps({"name": "purcell",
+                       "res": PurcellResponse.INFO,
+                       "info": Info.LIMITS,
+                       "limits": limits})
 
 def MoveResponse(exit_status, unit=None, locA=None, locB=None):
-    return json.dumps({"name":"purcell",
-                        "res": PurcellResponse.MOVE,
-                        "status":exit_status,
-                        "unit":unit,
-                        "locA":locA,
-                        "locB":locB})
-
-
-
-
+    return json.dumps({"name": "purcell",
+                       "res": PurcellResponse.MOVE,
+                       "status": exit_status,
+                       "unit": unit,
+                       "locA": locA,
+                       "locB": locB})
