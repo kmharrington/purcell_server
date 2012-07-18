@@ -11,6 +11,7 @@ Every JSON Command Object will have:
         "locB" = DC or EL location (A, B, C)
             ^^These are final locations not relative locations
 
+
     for "cmd" = RADIO
         I Don't know yet
 
@@ -22,6 +23,9 @@ Every JSON Command Object will have:
             "unit"
             "locA"
             "locB"
+            "status" <-- whether or not this set_location can be considered
+                        a location calibrate.
+                        0 - uncalibrated, 1 - calibrated
 
 Every JSON Response Object will have:
     "name" = "purcell"
@@ -52,6 +56,7 @@ Every JSON Response Object will have:
              "unit" = sky_point.???
             "locA" = EQ or AZ location (A, B, C)
             "locB" = DC or EL location (A, B, C)
+            "status" = 0-uncalibrated, 1-calibrated
 """
 
 
@@ -88,14 +93,15 @@ def ConnectResponse():
     return json.dumps({"name": "purcell",
                        "res": PurcellResponse.CONNECT})
 
-def LocationResponse(unit, locs):
+def LocationResponse(unit, locs, status):
     (locA, locB) = locs
     return json.dumps({"name": "purcell",
                        "res": PurcellResponse.INFO,
                        "info": Info.LOC,
                        "unit": unit,
                        "locA": locA,
-                       "locB": locB})
+                       "locB": locB,
+                       "status":status})
 
 def LimitResponse(limits):
     return json.dumps({"name": "purcell",

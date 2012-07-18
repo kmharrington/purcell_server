@@ -36,6 +36,7 @@ class proxy_server(asyncore.dispatcher):
         self.listen(5)
         self.eqLoc = 0
         self.dcLoc = 0
+        self.calib = 0
 
     def handle_accept(self):
         proxy_receiver(self, self.accept())
@@ -66,27 +67,36 @@ class proxy_receiver(asynchat.async_chat):
         res =''
         if cmd[1] == 'm':
             res = 'move:EXECUTE,' + cmd[2] + ',' + cmd[3] + ',' + cmd[4] + '\n'
+            if int(cmd[4]) > 200:
+                clicks = 200
+                status = 2
+            else:
+                clicks = int(cmd[4])
+                status = 0
             if cmd[2] == 'E':
                 if int(cmd[3]) == 0:
-                    self.server.eqLoc += int(cmd[4])
+                    self.server.eqLoc += clicks
                 else:
-                    self.server.eqLoc -= int(cmd[4])
+                    self.server.eqLoc -= clicks
             else:
                 if int(cmd[3]) == 0:
-                    self.server.dcLoc -= int(cmd[4])
+                    self.server.dcLoc -= clicks
                 else:
-                    self.server.dcLoc += int(cmd[4])
+                    self.server.dcLoc += clicks
             res += ('location:(' + str(self.server.eqLoc) + ','
-                    + str(self.server.dcLoc)+ ')\n')
-            res += ('move:COMPLETE,0,' + cmd[2] + ',' + cmd[3] + ','
+                    + str(self.server.dcLoc)+ '),' + str(self.server.calib) + '\n')
+            res += ('move:COMPLETE,'+ str(status) + ',' + cmd[2] + ',' + cmd[3] + ','
                     + cmd[4] + '\n')
         elif cmd[1] == 'l':
             res = "limits:0,0,1,0,0,1\n"
         elif cmd[1] == 'r':
             res = ('location:(' + str(self.server.eqLoc) + ','
-                   + str(self.server.dcLoc) + ')\n')
+                   + str(self.server.dcLoc) + '),'
+                   + str(self.server.calib) + '\n')
         elif cmd[1] =='e':
-            pass
+            self.server.eqLoc = int(cmd[2])
+            self.server.dcLoc = int(cmd[3])
+            self.server.calib = int(cmd[4])
         print('Respond: ' + res)
         self.push(res)
 

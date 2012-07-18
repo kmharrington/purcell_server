@@ -69,9 +69,8 @@ class proxy_sender(asynchat.async_chat):
 
     def handle_connect(self):
         """
-        I'd like for the first things sent to the telescope to
-        be requests for location and limit status but that's not
-        working yet
+        The first things sent to the telescope to
+        be requests for location and limit status
         """
         print('Sender Connected')
         self.server.tel.requestLocation(self)
@@ -119,15 +118,17 @@ class proxy_sender(asynchat.async_chat):
                         self.server.tel.setLocGoal((self.server.tel.getLocGoal()[0], self.server.tel.getLocation()[1]))
                 self.server.tel.currentMoveGoal = None
                 (ha, dc) = self.server.tel.clicks2hadc(
-                    self.server.tel.getLocation())
+                        self.server.tel.getLocation())
                 self.receiver.push(s.MoveResponse(status, sky_point.HADC,
                                                   ha, dc) + '\n')
                 self.server.tel.updateStatus(self)
         elif data[0] == 'location':
             cmd = data[1].split(',')
             eq = int(cmd[0][1:])
-            dc = int(cmd[1][:-1])
+            dc = int(cmd[1][:cmd[1].rfind(')')])
+            status = int(cmd[2])
             self.server.tel.setLocation(eq, dc)
+            self.server.tel.setCalib(status)
         elif data[0] == 'limits':
             limits = data[1].split(',')
             for i in range(len(limits)):
@@ -254,6 +255,7 @@ class proxy_receiver(asynchat.async_chat):
                 unit = cmd['unit']
                 locA = cmd['locA']
                 locB = cmd['locB']
+                status = cmd['status']
         except KeyError as e:
             self.push(s.FailResponse("Missing Required Key") +'\n')
             return
@@ -266,13 +268,17 @@ class proxy_receiver(asynchat.async_chat):
             immediately updated in the telescope class.
             '''
             (ha, dc) = self.server.tel.clicks2hadc(self.server.tel.getLocation())
-            pnt = sky_point(sky_point.HADC, ha, dc)
-            self.push(s.LocationResponse(unit, pnt.getLoc(unit)) + '\n')
+            self.push(s.LocationResponse(unit, (ha,dc),
+                                        self.server.tel.calibrated ) + '\n')
         elif info == s.Info.SET_LOCATION:
-            pnt = sky_point(unit, locA, locB)
+            if unit != sky_point.HADC:
+                self.push(s.FailResponse("Need HADC units to set location") + '\n')
+                return
+            print( 'Set location to: ' + str( (locA, locB) ))
             self.server.tel.setTelescopeLocation(
-                self.server.tel.hadc2clicks(pnt.getLoc(sky_point.HADC)),
+                self.server.tel.hadc2clicks( (locA, locB) ),
                 self.sender)
+            self.server.tel.setCalib(status)
         elif info == s.Info.TELESCOPE:
             self.push(s.TelescopeResponse(self.server.tel.MIN_STEP))
 
@@ -308,6 +314,7 @@ class telescope:
         self.dc_clicks = 0
         self.eq_goal = 0
         self.dc_goal = 0
+        self.calibrated = 0
         self.currentMoveLoc = None
         self.limitStatus = [0, 0, 0, 0, 0, 0]
 
@@ -317,6 +324,9 @@ class telescope:
             return True
         else:
             return False
+    
+    def setCalib(self, calib):
+        self.calibrated = calib
 
     def setLocGoal(self, newargs):
         (newEq, newDC) = newargs
@@ -337,9 +347,9 @@ class telescope:
 
     def setTelescopeLocation(self, Clicks, sender):
         (eqClicks, dcClicks) = Clicks
-        command = 'cmd e ' + str(eqClicks) + ' ' + str(dcClicks) + '\ncmd r\n'
+        command = 'cmd e ' + str(eqClicks) + ' ' + str(dcClicks) + ' ' + str(self.calibrated) + '\ncmd r\n'
         sender.push(command)
-        self.setLocGoal(eqClicks, dcClicks)
+        self.setLocGoal( (eqClicks, dcClicks))
 
     def willMoveOnUpdate(self):
         if (abs(self.eq_goal - self.eq_clicks) > telescope.MIN_STEP_CLICKS or
@@ -407,11 +417,10 @@ class telescope:
     def updateStatus(self, sender):
         # We only move Eq OR Dc b/c we don't want to pile up commands
         # on the Arduino
-
-        #returns true if we don't have to move Eq
-        if self.moveEQ(sender):
-            #returns true if we don't have to move DC
-            if self.moveDC(sender):
+        #returns true if we don't have to move DC
+        if self.moveDC(sender):
+            #returns true if we don't have to move Eq
+            if self.moveEQ(sender):
                 self.status = telescope.IDLE
             else:
                 self.status = telescope.MOVING
