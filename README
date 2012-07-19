@@ -1,10 +1,10 @@
-This is the server used to communicate with the Arduino powering the telescope motors. It may/can be extended to communicate with the RF box once that becomes avaliable.
+This is the server used to communicate with the Arduino powering the telescope motors. It may/can be extended to communicate with the RF box once that becomes available.
 
-The initial working version allows the client to tell the telescope to move to some point in the sky. This point can be designated in one of four coordinate systems. (RA,Dec), (Az, El), (HA, Dec), and galactic coordinates.
+The initial working version allows the client to tell the telescope to move to some point in the sky. This point can be designated in one of four coordinate systems. (RA,Dec), (Az, El), (HA, Dec), and galactic coordinates. In the (HA, Dec) coordinate system the locations are in degrees instead of hours, because degrees are so much nicer. In the (RA, Dec) system the RA is in hours. 
 
 The server can also respond to requests for information about the telescope's current location and the status of limit switches.
 
-It is currently missing any nice way of calibrating the location of the telescope. This will hopefully be implemented later.
+Whenever the user sets the telescope location, cmd: Info.SET_LOCATION, the user must include a status option. This option is 1 in the telescope location can be considered calibrated and 0 if it can not. The Arduino will save this information so later users (if they trust the earlier ones) can know if the location has been calibrated. Essentially, I'm imagining the user taking the telescope to limit switches or zeroing in on the Sun and then setting the telescope's location based on where the user would now know the telescope to be.
 
 For the Telescope Limit Switches:
 The limit switch calibrations are likely correct within about 2 degrees. This should be enough that once the RF portion has been created the actual pointing location can be found. The best way to calibrate the pointing location will be from looking at radio sources (the sun) where we know their exact location and going from there.
@@ -14,4 +14,13 @@ The equatorial mount is counted off in hour angle, the Right Limit is at approxi
     Right Limit Hour Angle: "5:40:10.8"
     Left Limit Hour Angle: "-5:46:18.33"
     
-The declination mount is, unsurprisingly, measured by the declination. The upper limit is at approximately (66,51,55) degrees.
+The declination mount is, unsurprisingly, measured by the declination. From estimated based on where the zenith is labeled on the mount's protractor:
+    Upper Limit: 66 degrees
+    Lower Limit: -34 degrees
+    
+Starting the Server:
+The PyEphem Astronomy package must be installed on the computer, this package is part of the standard linux package repositories. Then:
+    prompt> python purcell_server.py '192.168.1.12' 1420
+
+Connecting to the Server:
+Connect to the ip address of the computer running the purcell_server at port 9420 which is (1420 + 8000). Then send the 'RUBUSY' request to the server as shown in basicClient.py 

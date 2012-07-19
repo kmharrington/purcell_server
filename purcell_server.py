@@ -137,7 +137,8 @@ class proxy_sender(asynchat.async_chat):
                 self.receiver.push(s.LimitResponse(
                     self.server.tel.getLimitStatus()) + '\n')
         elif data[0] == 'error':
-            self.receiver.push(s.FailResponse("Motor Error: " + data[1]) + '\n')
+            if self.receiver:
+                self.receiver.push(s.FailResponse("Motor Error: " + data[1]) + '\n')
 
     def handle_close(self):
         if self.receiver:
@@ -367,6 +368,7 @@ class telescope:
             else:
                 command += '0 '
             command += str(abs(toMove))
+            print 'Command: ' +command
             sender.push(command + '\n')
             return False
         else:
